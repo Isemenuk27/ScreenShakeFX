@@ -1,8 +1,8 @@
 if CLIENT then
 CreateClientConVar("scrsk_enable_cl", "1", true, false)
-CreateClientConVar("scrsk_amplitude", "1", true, false)
+CreateClientConVar("scrsk_amplitude", "3", true, false)
 CreateClientConVar("scrsk_frequency", "3", true, false)
-CreateClientConVar("scrsk_duration", "1", true, false)
+CreateClientConVar("scrsk_duration", "2", true, false)
 
 /*
 CreateClientConVar("scrsk_enable_pp", "1", true, false)
