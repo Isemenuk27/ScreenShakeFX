@@ -1,4 +1,4 @@
-if CLIENT then
+if ( CLIENT ) then
 	local scrsk_enable_cl = CreateClientConVar("scrsk_enable_cl", "1", true, false)
 	local scrsk_amplitude = CreateClientConVar("scrsk_amplitude", "3", true, false)
 	local scrsk_frequency = CreateClientConVar("scrsk_frequency", "3", true, false)
@@ -15,9 +15,9 @@ if CLIENT then
 	cvars.AddChangeCallback("scrsk_duration", function(CVarName, OldVar, NewVar) Duration = tonumber(NewVar) end)
 
 	net.Receive( "DoExplosionShake", function(len)
-		if !Enabled then return end
+		if ( not Enabled ) then return end
 		local dmg = net.ReadInt(14)
-		util.ScreenShake( Vector(0, 0, 0), Amplitude * ( ply:GetMaxHealth() / dmg ), Frequency, Duration, 0 )
+		util.ScreenShake( vector_origin, Amplitude * ( LocalPlayer():GetMaxHealth() / dmg ), Frequency, Duration, 0 )
 	end )
 	
 	hook.Add( "AddToolMenuCategories", "postprocessingMenuShake", function()
@@ -28,30 +28,32 @@ if CLIENT then
 		spawnmenu.AddToolMenuOption( "Options", "postprocessing", "postprocessingMenuShake", "#Screen Shake", "", "", function( panel )
 			panel:ClearControls()
 
-			if LocalPlayer():IsAdmin() then
+			if LocalPlayer():IsSuperAdmin() then
 				panel:CheckBox( "Enable on all clients", "scrsk_enable" )
 			end
+
 			panel:CheckBox( "Enable", "scrsk_enable_cl" )
 			panel:NumSlider( "Amplitude", "scrsk_amplitude", 0.1, 7 )
 			panel:NumSlider( "Frequency", "scrsk_frequency", 0.01, 5 )
 			panel:NumSlider( "Duration", "scrsk_duration", 0.5, 5 )
 		end )
 	end )
-end
-
-if SERVER then
+else
 	util.AddNetworkString( "DoExplosionShake" )
 
-	local Enabled = CreateConVar("scrsk_enable", "1", { FCVAR_ARCHIVE }, "Enable screen shake after explosion" )
+	local scrsk_enable = CreateConVar("scrsk_enable", "1", { FCVAR_ARCHIVE }, "Enable screen shake after explosion" )
+
+	local Enabled = scrsk_enable:GetBool()
+	cvars.AddChangeCallback( "scrsk_enable", function(CVarName, OldVar, NewVar) Enabled = tobool(NewVar) end )
 
 	hook.Add( "EntityTakeDamage", "ExplosionShakeHook", function( target, dmginfo )
-
-		if !Enabled:GetBool() then return end
-		if !target:IsPlayer() then return end
-		if !dmginfo:IsDamageType(DMG_BLAST) then return end
+		if not Enabled then return end
+		if ( not IsValid( target ) ) then return end
+		if ( not target:IsPlayer() ) then return end
+		if ( not dmginfo:IsDamageType( DMG_BLAST ) ) then return end
 
 		net.Start( "DoExplosionShake" )
 			net.WriteInt( dmginfo:GetDamage(), 14 )
-		net.Send(target)
+		net.Send( target )
 	end)
 end
